@@ -3,7 +3,6 @@ apply plugin: 'com.taobao.android.weex.plugin.gradle'
 
 android {
     compileSdkVersion project.compileSdkVersion
-    buildToolsVersion project.buildToolsVersion
 
     defaultConfig {
         applicationId "com.weex.app"
@@ -15,14 +14,34 @@ android {
             abiFilters "x86"
             abiFilters "armeabi"
         }
-    }
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.equals('app-debug.apk')) {
-                def fileName = outputFile.name.replace("app-debug.apk", "weex-app.apk")
-                output.outputFile = new File(outputFile.parent, fileName)
+        //添加部分
+        javaCompileOptions {
+            annotationProcessorOptions {
+                includeCompileClasspath true
             }
+        }
+    }
+//    applicationVariants.all { variant ->
+//        variant.outputs.each { output ->
+//            def outputFile = output.outputFile
+//            if (outputFile != null && outputFile.name.equals('app-debug.apk')) {
+//                def fileName = outputFile.name.replace("app-debug.apk", "weex-app.apk")
+//                output.outputFile = new File(outputFile.parent, fileName)
+//            }
+//        }
+//    }
+    //配置自定义打包名称
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def fileName
+            def date = new Date()
+            def formattedDate = date.format('yyyyMMdd')
+            if (variant.buildType.name.equals('release')) {
+                fileName = "${variant.mergedFlavor.versionName}_release_${formattedDate}.apk"
+            } else if (variant.buildType.name.equals('debug')) {
+                fileName = "${variant.mergedFlavor.versionName}_debug_${formattedDate}.apk"
+            }
+            outputFileName = fileName;
         }
     }
     signingConfigs {
@@ -54,13 +73,15 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildToolsVersion '27.0.3'
 }
 
 
 dependencies {
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.taobao.android:weex_sdk:0.16.0'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
